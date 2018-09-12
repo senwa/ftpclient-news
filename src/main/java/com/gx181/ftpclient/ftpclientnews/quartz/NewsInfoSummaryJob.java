@@ -26,6 +26,8 @@ import com.gx181.ftpclient.ftpclientnews.FTPUtils;
 import com.gx181.ftpclient.ftpclientnews.NewsConfigItem;
 import com.gx181.ftpclient.ftpclientnews.PropertyHelper;
 import com.gx181.ftpclient.ftpclientnews.StringUtils;
+import com.gx181.ftpclient.ftpclientnews.UnicodeInputStream;
+import com.gx181.ftpclient.ftpclientnews.UnicodeReader;
 
 public class NewsInfoSummaryJob implements Job {
 	private final static Logger LOGGER = LoggerFactory.getLogger(NewsInfoSummaryJob.class);
@@ -142,8 +144,12 @@ public class NewsInfoSummaryJob implements Job {
 					NewsConfigItem newsConfigItemTemp = null;
 					for(int i=0; i<configFiles.length; i++){
 						LOGGER.debug("配置文件名称{},{}",configFiles[i].getPath(),configFiles[i].getName());
+						FileInputStream in = null;
+						UnicodeReader uin = null;
 						try {
-							pConfig.load(new FileReader(configFiles[i]));
+					        in = new FileInputStream(configFiles[i]);  
+					        uin = new UnicodeReader(in,"UTF-8");
+							pConfig.load(uin);
 							String time = pConfig.getProperty("time", "");//时间
 							String title = pConfig.getProperty("title", "");//标题
 							String icon = pConfig.getProperty("icon", "");//图片
@@ -175,11 +181,17 @@ public class NewsInfoSummaryJob implements Job {
 							LOGGER.debug("新闻配置项:{}",newsConfigItemTemp.toString());
 							jsonMapItemList.add(newsConfigItemTemp);
 							pConfig.clear();
-							
 						} catch (FileNotFoundException e) {
 							e.printStackTrace();
 						} catch (IOException e) {
 							e.printStackTrace();
+						}finally{
+							try {
+								in.close();
+								uin.close();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 					
